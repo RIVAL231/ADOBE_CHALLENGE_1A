@@ -1,0 +1,7 @@
+pdf2docx
+pypdf
+pdfplumber
+fuzz
+python-Levenshtein
+thefuzz
+numpy
