@@ -1,126 +1,120 @@
 # Challenge 1a: PDF Processing Solution
 
 ## Overview
-This is a **sample solution** for Challenge 1a of the Adobe India Hackathon 2025. The challenge requires implementing a PDF processing solution that extracts structured data from PDF documents and outputs JSON files. The solution must be containerized using Docker and meet specific performance and resource constraints.
+
+This repository contains a **sample solution** for **Challenge 1a** of the **Adobe India Hackathon 2025**. The objective is to implement a PDF processing system that extracts structured information from PDF files and outputs it in JSON format. The solution is **Dockerized**, uses only **open-source** libraries, and adheres strictly to the challenge constraints.
+
+---
 
 ## Official Challenge Guidelines
 
 ### Submission Requirements
-- **GitHub Project**: Complete code repository with working solution
-- **Dockerfile**: Must be present in the root directory and functional
-- **README.md**:  Documentation explaining the solution, models, and libraries used
+
+* ✅ **GitHub Project** with a complete and working solution
+* ✅ **Dockerfile** at the root of the repository
+* ✅ **README.md** explaining the solution, libraries, and models used
 
 ### Build Command
+
 ```bash
 docker build --platform linux/amd64 -t mysolutionname:somerandomidentifier .
 ```
 
 ### Run Command
+
 ```bash
 docker run --rm -v $(pwd)/input:/app/input -v $(pwd)/output:/app/output --network none mysolutionname:somerandomidentifier
 ```
 
-### Critical Constraints
-- **Execution Time**: ≤ 10 seconds for a 50-page PDF
-- **Model Size**: ≤ 200MB (if using ML models)
-- **Network**: No internet access allowed during runtime execution
-- **Runtime**: Must run on CPU (amd64) with 8 CPUs and 16 GB RAM
-- **Architecture**: Must work on AMD64, not ARM-specific
+> For Windows (PowerShell):
+
+```powershell
+docker run --rm -v "${PWD}/input:/app/input" -v "${PWD}/output:/app/output" --network none mysolutionname:somerandomidentifier
+```
+
+### Constraints
+
+* ⏱ **Execution Time**: ≤ 10 seconds for a 50-page PDF
+* 📀 **Model Size**: ≤ 200MB (if used)
+* ❌ **No internet** access at runtime
+* ⚖️ **CPU Only**: Must run on 8 CPU cores and 16GB RAM
+* 🌐 **Architecture**: Compatible with AMD64 only
 
 ### Key Requirements
-- **Automatic Processing**: Process all PDFs from `/app/input` directory
-- **Output Format**: Generate `filename.json` for each `filename.pdf`
-- **Input Directory**: Read-only access only
-- **Open Source**: All libraries, models, and tools must be open source
-- **Cross-Platform**: Test on both simple and complex PDFs
 
-## Sample Solution Structure
+* 📊 **Automatic batch processing** from `/app/input`
+* 💾 **JSON output** named after each PDF file
+* 🔒 **Read-only** input directory
+* 🔗 **Open-source** dependencies only
+* ♻️ **Cross-platform** support (simple and complex PDFs)
+
+---
+
+## Directory Structure
+
 ```
 Challenge_1a/
 ├── sample_dataset/
-│   ├── outputs/         # JSON files provided as outputs.
-│   ├── pdfs/            # Input PDF files
-│   └── schema/          # Output schema definition
-│       └── output_schema.json
-├── Dockerfile           # Docker container configuration
-├── process_pdfs.py      # Sample processing script
-└── README.md           # This file
+│   ├── outputs/             # Sample JSON outputs
+│   ├── pdfs/                # Sample input PDFs
+│   └── schema/
+│       └── output_schema.json  # Required output schema
+├── Dockerfile               # Docker setup
+├── process_pdfs.py          # Core PDF processing script
+├── requirements.txt         # Python dependencies
+└── README.md                # Documentation (this file)
 ```
 
+---
 
+## Features
 
-### Current Implementation
-The provided `process_pdfs.py` implements a robust PDF processing solution that:
+### Core Functionalities
 
-#### Features:
-- **Intelligent Title Extraction**: Extracts document titles from PDF metadata and content analysis
-- **Hierarchical Outline Generation**: Creates structured outlines with H1, H2, H3 heading levels
-- **Bookmark Processing**: Utilizes PDF bookmarks/TOC when available for accurate structure
-- **Content Analysis Fallback**: Analyzes font sizes, formatting, and text patterns for heading detection
-- **Page Number Tracking**: Accurately identifies page numbers for each heading
-- **Error Handling**: Robust error handling with graceful fallbacks
+* ✍ **Title Extraction**: Smart extraction using metadata and content heuristics
+* 🔹 **Hierarchical Outline Detection**: H1, H2, H3 generation via font and structure
+* 🔖 **Bookmark Parsing**: Leverages TOC/bookmarks if available
+* 🔎 **Content Fallback**: Font-size based detection for structure
+* ⏱ **Page Number Tagging**: Accurate section-to-page linking
+* ⚠️ **Robust Error Handling**: Fallbacks ensure continuity
 
-#### Libraries Used:
-- **pypdf (5.8.0)**: Fast PDF metadata and bookmark extraction
-- **pdfplumber (0.11.4)**: Detailed text analysis with font and positioning information
-- **Standard libraries**: json, re, pathlib for data processing
+### Libraries Used
 
-#### Processing Pipeline:
-1. **Title Extraction**:
-   - Primary: Extract from PDF metadata (/Title field)
-   - Fallback: Analyze first page for largest font text
-   - Final fallback: Use first meaningful text line
+* `pypdf==5.8.0` — PDF metadata and bookmark extraction
+* `pdfplumber==0.11.4` — Detailed font and text layout parsing
+* Standard Python libraries: `json`, `pathlib`, `re`, `os`
 
-2. **Outline Generation**:
-   - Primary: Extract from PDF bookmarks/table of contents
-   - Fallback: Analyze content using font size hierarchy and formatting patterns
-   - Filter and clean headings based on length and content patterns
+---
 
-3. **Heading Level Assignment**:
-   - Analyze font size hierarchy to determine H1, H2, H3 levels
-   - Consider text patterns (numbered sections, title case, etc.)
-   - Maintain consistent hierarchy throughout document
+## Processing Workflow
 
-#### Performance Optimizations:
-- **Two-pass processing**: First pass for font analysis, second for heading extraction
-- **Memory efficient**: Processes pages individually to minimize memory usage
-- **Fast libraries**: Uses optimized PDF libraries suitable for large documents
-- **Duplicate elimination**: Removes duplicate headings automatically
-
-### Implementation Overview (`process_pdfs.py`)
 ```python
-# Main processing workflow
+# Simplified structure from process_pdfs.py
+
 def process_pdfs():
     input_dir = Path("/app/input")
     output_dir = Path("/app/output")
-    
-    # Process all PDF files
     for pdf_file in input_dir.glob("*.pdf"):
-        # Extract title and outline
         result = process_single_pdf(pdf_file)
-        
-        # Save structured JSON output
-        output_file = output_dir / f"{pdf_file.stem}.json"
-        with open(output_file, "w", encoding="utf-8") as f:
+        with open(output_dir / f"{pdf_file.stem}.json", "w", encoding="utf-8") as f:
             json.dump(result, f, indent=4, ensure_ascii=False)
 
 def process_single_pdf(pdf_path):
-    # Extract document title from metadata or content
     title = extract_title(pdf_path)
-    
-    # Generate hierarchical outline
     outline = extract_outline(pdf_path)
-    
     return {"title": title, "outline": outline}
 ```
 
-### Docker Configuration
+---
+
+## Dockerfile
+
 ```dockerfile
 FROM --platform=linux/amd64 python:3.10-slim
 
 WORKDIR /app
 
-# Install system dependencies for PDF processing
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
@@ -130,116 +124,111 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy processing script
+# Add main script
 COPY process_pdfs.py .
 
 CMD ["python", "process_pdfs.py"]
 ```
 
-### Dependencies (requirements.txt)
+---
+
+## Requirements File
+
 ```
 pypdf==5.8.0
 pdfplumber==0.11.4
 ```
 
-## Expected Output Format
+---
 
-### Required JSON Structure
-Each PDF should generate a corresponding JSON file that **must conform to the schema** defined in `sample_dataset/schema/output_schema.json`.
+## Output Schema
 
+Each generated JSON must conform to the schema defined in:
 
-## Implementation Guidelines
+```
+sample_dataset/schema/output_schema.json
+```
 
-### Performance Considerations
-- **Memory Management**: Efficient handling of large PDFs
-- **Processing Speed**: Optimize for sub-10-second execution
-- **Resource Usage**: Stay within 16GB RAM constraint
-- **CPU Utilization**: Efficient use of 8 CPU cores
+Example Output:
 
-### Testing Strategy
-- **Simple PDFs**: Test with basic PDF documents
-- **Complex PDFs**: Test with multi-column layouts, images, tables
-- **Large PDFs**: Verify 50-page processing within time limit
+```json
+{
+  "title": "Sample PDF Title",
+  "outline": [
+    {
+      "heading": "Introduction",
+      "level": 1,
+      "page_number": 1
+    },
+    {
+      "heading": "Getting Started",
+      "level": 2,
+      "page_number": 2
+    }
+  ]
+}
+```
 
+---
 
-## Solution Performance
+## Testing and Performance
 
-### Benchmark Results
-- **Processing Speed**: 2.6 MB/second average
-- **Time per File**: ~0.22 seconds average
-- **50-page PDF Estimate**: ~1.9 seconds (well under 10s limit)
-- **Memory Usage**: Efficient, processes documents page-by-page
+### Performance Benchmarks
 
-### Tested Configurations
-- ✅ Simple PDFs (forms, single-column text)
-- ✅ Complex PDFs (multi-column, academic papers)
-- ✅ Documents with existing bookmarks/TOC
-- ✅ Documents requiring content analysis
-- ✅ Various font sizes and formatting styles
+* ⏳ Avg Processing Speed: **2.6MB/sec**
+* ⌛ Per File Time: **\~0.22 sec**
+* 📓 50-page PDF: **\~1.9 sec**
+* ᾞe Memory Usage: **Efficient** (page-by-page)
+
+### Tested On
+
+* ✅ Simple PDFs
+* ✅ Multi-column complex layouts
+* ✅ PDFs with bookmarks
+* ✅ PDFs without bookmarks (using content fallback)
+* ✅ Various font sizes and formatting
+
+---
 
 ## Usage
 
 ### Local Testing
+
 ```bash
-# Install dependencies
 pip install -r requirements.txt
-
-# Create test directories
 mkdir -p input output
-
-# Copy PDFs to input directory
 cp sample_dataset/pdfs/*.pdf input/
-
-# Run processing
 python process_pdfs.py
-
-# Check outputs
 ls output/
 ```
 
-## Docker Usage
+### Docker Instructions
 
-### Official Build and Run Commands
-
-#### For Linux/macOS (Bash):
 ```bash
-# Build the Docker image
+# Build Docker Image
 docker build --platform linux/amd64 -t mysolutionname:somerandomidentifier .
 
-# Run the container
+# Run Container
 docker run --rm -v $(pwd)/input:/app/input -v $(pwd)/output:/app/output --network none mysolutionname:somerandomidentifier
 ```
 
-#### For Windows (PowerShell):
-```powershell
-# Build the Docker image
-docker build --platform linux/amd64 -t mysolutionname:somerandomidentifier .
+---
 
-# Run the container
-docker run --rm -v "${PWD}/input:/app/input" -v "${PWD}/output:/app/output" --network none mysolutionname:somerandomidentifier
-```
+## Checklist
 
-### Usage Steps
-1. **Prepare input directory**: Create `input/` folder and copy PDF files
-2. **Build the image**: Use the official build command above
-3. **Run processing**: Use the official run command above
-4. **Check results**: Generated JSON files will appear in `output/` directory
-
-### Requirements Checklist
-- [x] All PDFs in input directory are processed
-- [x] JSON output files are generated for each PDF  
-- [x] Output format matches required structure
-- [x] **Output conforms to schema** in `sample_dataset/schema/output_schema.json`
-- [x] Processing completes within 10 seconds for 50-page PDFs
-- [x] Solution works without internet access
-- [x] Memory usage stays within 16GB limit
-- [x] Compatible with AMD64 architecture
-- [x] Uses only open-source libraries (pypdf, pdfplumber)
-- [x] Robust error handling and graceful fallbacks
-- [x] Intelligent title extraction from metadata and content
-- [x] Hierarchical outline generation with proper heading levels
+* [x] Batch process all PDFs in `/app/input`
+* [x] Output each file to `/app/output` as JSON
+* [x] Adheres to schema
+* [x] Runs under 10 seconds for 50-page PDFs
+* [x] No internet used during runtime
+* [x] Open source libraries only
+* [x] Fully Dockerized
+* [x] Compatible with AMD64 (not ARM)
+* [x] Strong fallback mechanisms for robustness
 
 ---
 
-**Implementation Status**: ✅ **COMPLETE** - This is a fully functional implementation that meets all the official challenge requirements and constraints. #   A D O B E _ C H A L L E N G E _ 1 A  
- 
+## Final Status
+
+**Implementation Status**: ✅ COMPLETE
+This project fully satisfies the Adobe Hackathon 2025 Challenge 1a requirements with efficient, scalable, and schema-compliant PDF processing.
